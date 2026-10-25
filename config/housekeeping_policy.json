@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "policy_name": "MUFG-GLOBAL-INFRA-HOUSEKEEPING-SLA",
+  "organization": "MUFG Bank, Ltd. - Operations Infrastructure & Systems Management",
+  "audit_standard": "MUFG Global Operational Risk & Systems Housekeeping Policy v4.2",
+  "sla_thresholds": {
+    "disk_warning_pct": 75.0,
+    "disk_critical_pct": 85.0,
+    "inode_warning_pct": 75.0,
+    "inode_critical_pct": 85.0,
+    "escalation": {
+      "auto_incident_generation": true,
+      "servicenow_assignment_group": "MUFG-GLOBAL-STORAGE-L2",
+      "servicenow_incident_prefix": "INC009",
+      "critical_priority": "P2 - High",
+      "warning_priority": "P3 - Moderate"
+    }
+  },
+  "governance_rules": {
+    "active_file_protection_hours": 24,
+    "active_file_protection_days": 1,
+    "require_sha256_manifest": true
+  },
+  "platforms": {
+    "UNIX_RHEL": {
+      "default_mount": "/var/log/mufg_app",
+      "sandbox_rel_path": "var/log/mufg_app",
+      "rules": {
+        "compress_age_days": 7,
+        "compression_type": "gzip",
+        "compression_extension": ".gz",
+        "purge_archive_age_days": 30,
+        "purge_temp_age_days": 1,
+        "immediate_purge_patterns": [
+          "*.core",
+          "core.*",
+          "*.tmp",
+          "*.dmp"
+        ]
+      }
+    },
+    "WINDOWS_SVR": {
+      "default_mount": "C:\\Temp\\Dump",
+      "sandbox_rel_path": "win_temp_dump",
+      "rules": {
+        "purge_temp_age_days": 3,
+        "purge_dump_age_days": 3,
+        "immediate_purge_patterns": [
+          "*.tmp",
+          "*.dmp",
+          "*.tmp.log"
+        ]
+      }
+    },
+    "AS400_ISERIES": {
+      "default_mount": "/QSYS.LIB/QUSRSYS.LIB/QSYSPRT.OUTQ",
+      "sandbox_rel_path": "as400_qsysprt",
+      "rules": {
+        "archive_spool_age_days": 14,
+        "purge_joblog_age_days": 30,
+        "spool_file_prefix": "SPL_",
+        "joblog_prefix": "JOBLOG_"
+      }
+    }
+  }
+}
+

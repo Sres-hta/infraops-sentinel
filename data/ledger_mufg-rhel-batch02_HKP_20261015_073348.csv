@@ -1,0 +1,5 @@
+run_id,file_path,file_age_days,action_taken,size_kb,timestamp_ist
+HKP_20261015_073348,/home/zarakari/Downloads/srestha_resume/project 2/infraops-sentinel/sandbox_fs/var/log/mufg_batch/eod_reconcile_active.log,0,SKIPPED_ACTIVE,120.0,2026-10-15 13:03:48 IST
+HKP_20261015_073348,/home/zarakari/Downloads/srestha_resume/project 2/infraops-sentinel/sandbox_fs/var/log/mufg_batch/eod_reconcile_20261006.log.gz,9,COMPRESSED_GZ,0.9,2026-10-15 13:03:48 IST
+HKP_20261015_073348,/home/zarakari/Downloads/srestha_resume/project 2/infraops-sentinel/sandbox_fs/var/log/mufg_batch/eod_reconcile_20260828.log.gz,38,PURGED_RETENTION,0.8,2026-10-15 13:03:48 IST
+HKP_20261015_073348,/home/zarakari/Downloads/srestha_resume/project 2/infraops-sentinel/sandbox_fs/var/log/mufg_batch/scratch_sort.tmp,3,PURGED_RETENTION,350.0,2026-10-15 13:03:48 IST

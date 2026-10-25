@@ -1,0 +1,153 @@
+{
+  "version": "1.0.0",
+  "policy_name": "MUFG-RUNBOOK-ORCHESTRATION-SOP",
+  "change_governance": {
+    "change_ref": "CHG0049210",
+    "change_title": "Monthly Patching & IPL Window - Core Banking & Payments Infrastructure",
+    "risk_level": "High (Tier 1/2 Production Impact)",
+    "approval_status": "CAB_APPROVED",
+    "cab_lead": "MUFG Production Operations Board",
+    "maintenance_window": {
+      "start_time_ist": "2026-10-18 01:00:00 IST",
+      "end_time_ist": "2026-10-18 05:00:00 IST",
+      "max_duration_hours": 4
+    },
+    "escalation": {
+      "auto_incident_generation": true,
+      "p1_incident_prefix": "INC0094899",
+      "assignment_group": "MUFG-WIN-MIDDLEWARE-L2",
+      "bridge_line": "MUFG-INCIDENT-WAR-ROOM-01",
+      "escalation_sla_minutes": 15
+    }
+  },
+  "dependency_tiers": {
+    "Tier 1": {
+      "layer": "Edge / DMZ Payment Gateways",
+      "shutdown_priority": 1,
+      "startup_priority": 3,
+      "depends_on": ["Tier 2", "Tier 3"]
+    },
+    "Tier 2": {
+      "layer": "Payment Processing Middleware & Settlement Daemons",
+      "shutdown_priority": 2,
+      "startup_priority": 2,
+      "depends_on": ["Tier 3"]
+    },
+    "Tier 3": {
+      "layer": "Core Banking Subsystems & Ledger DBs",
+      "shutdown_priority": 3,
+      "startup_priority": 1,
+      "depends_on": []
+    }
+  },
+  "nodes": [
+    {
+      "node_id": "NODE_SWIFT_GW",
+      "hostname": "mufg-rhel-core01",
+      "platform": "UNIX_RHEL",
+      "tier": "Tier 1",
+      "service_name": "mufg-swift-gateway.service",
+      "description": "SWIFT Alliance Gateway Edge Connector",
+      "shutdown_order": 1,
+      "startup_order": 5,
+      "precheck_command": "ss -tan | grep :8443 | wc -l",
+      "precheck_criteria": "Active sockets == 0 (Drain live ingress traffic)",
+      "stop_command": "systemctl stop mufg-swift-gateway",
+      "stop_sla_sec": 30,
+      "start_command": "systemctl start mufg-swift-gateway",
+      "start_sla_sec": 30,
+      "health_check": {
+        "type": "PORT_HTTP",
+        "port": 8443,
+        "endpoint": "/health/swift",
+        "expected_status": 200
+      }
+    },
+    {
+      "node_id": "NODE_WIN_PAY",
+      "hostname": "mufg-win-pay01",
+      "platform": "WINDOWS_SVR",
+      "tier": "Tier 2",
+      "service_name": "MUFG_ISO20022_PaymentEngine",
+      "description": "High-Value Payment Transformation & Routing Engine",
+      "shutdown_order": 2,
+      "startup_order": 4,
+      "precheck_command": "Get-MsmqQueue -Name 'mufg_iso20022_inbound' | Measure-Object -Property MessageCount -Sum",
+      "precheck_criteria": "Queue depth == 0 (Zero in-flight payment messages)",
+      "stop_command": "Stop-Service -Name 'MUFG_ISO20022_PaymentEngine' -Force",
+      "stop_sla_sec": 45,
+      "start_command": "Start-Service -Name 'MUFG_ISO20022_PaymentEngine'",
+      "start_sla_sec": 45,
+      "health_check": {
+        "type": "PORT_HSM",
+        "port": 9443,
+        "validation": "HSM_CRYPTO_HANDSHAKE_VALID",
+        "retry_limit": 1
+      }
+    },
+    {
+      "node_id": "NODE_RHEL_BATCH",
+      "hostname": "mufg-rhel-batch02",
+      "platform": "UNIX_RHEL",
+      "tier": "Tier 2",
+      "service_name": "mufg-settlement-daemon.service",
+      "description": "Interbank Clearing & EOD Settlement Daemon",
+      "shutdown_order": 3,
+      "startup_order": 3,
+      "precheck_command": "test ! -f /var/run/mufg_batch.pid",
+      "precheck_criteria": "No active settlement lockfile in /var/run/mufg_batch.pid",
+      "stop_command": "systemctl stop mufg-settlement-daemon",
+      "stop_sla_sec": 30,
+      "start_command": "systemctl start mufg-settlement-daemon",
+      "start_sla_sec": 30,
+      "health_check": {
+        "type": "PID_LOCK",
+        "pid_file": "/var/run/mufg_batch.pid",
+        "process_name": "mufg_settled"
+      }
+    },
+    {
+      "node_id": "NODE_AS400_CORE",
+      "hostname": "mufg-as400-core01",
+      "platform": "AS400_ISERIES",
+      "tier": "Tier 3",
+      "service_name": "QBATCH & QINTER",
+      "description": "IBM iSeries Core Banking Batch & Interactive Subsystem",
+      "shutdown_order": 4,
+      "startup_order": 1,
+      "precheck_command": "WRKACTJOB SBS(QINTER) STATUS(*RUN)",
+      "precheck_criteria": "Zero active user teller sessions in QINTER",
+      "stop_command": "ENDSBS SBS(QBATCH) OPTION(*CNTRLD) DELAY(60) ; ENDSBS SBS(QINTER) OPTION(*CNTRLD) DELAY(60)",
+      "stop_sla_sec": 90,
+      "start_command": "STRSBS SBSD(QBATCH) ; STRSBS SBSD(QINTER)",
+      "start_sla_sec": 90,
+      "health_check": {
+        "type": "SUBSYSTEM_STATUS",
+        "subsystems": ["QBATCH", "QINTER"],
+        "expected_state": "*ACTIVE"
+      }
+    },
+    {
+      "node_id": "NODE_AS400_PRD",
+      "hostname": "mufg-as400-prd02",
+      "platform": "AS400_ISERIES",
+      "tier": "Tier 3",
+      "service_name": "MUFGCORE",
+      "description": "General Ledger Database & Journal Subsystem",
+      "shutdown_order": 5,
+      "startup_order": 2,
+      "precheck_command": "WRKJRN JRN(MUFGCORE/COREJRN)",
+      "precheck_criteria": "Journal sequence synchronized; zero uncommitted transactions",
+      "stop_command": "ENDSBS SBS(MUFGCORE) OPTION(*CNTRLD) DELAY(60)",
+      "stop_sla_sec": 90,
+      "start_command": "STRSBS SBSD(MUFGCORE/MUFGCORE)",
+      "start_sla_sec": 90,
+      "health_check": {
+        "type": "SUBSYSTEM_STATUS",
+        "subsystems": ["MUFGCORE"],
+        "expected_state": "*ACTIVE"
+      }
+    }
+  ]
+}
+

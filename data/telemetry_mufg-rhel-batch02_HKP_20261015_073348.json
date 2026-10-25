@@ -1,0 +1,17 @@
+{
+  "run_id": "HKP_20261015_073348",
+  "timestamp_ist": "2026-10-15 13:03:48 IST",
+  "hostname": "mufg-rhel-batch02",
+  "platform": "UNIX_RHEL",
+  "filesystem_path": "/home/zarakari/Downloads/srestha_resume/project 2/infraops-sentinel/sandbox_fs/var/log/mufg_batch",
+  "before_used_pct": 74.4,
+  "after_used_pct": 70.5,
+  "inodes_used_pct": 30.1,
+  "files_compressed": 1,
+  "files_purged": 2,
+  "files_skipped": 1,
+  "space_reclaimed_mb": 0.98,
+  "sha256_manifest_hash": "b6dcf203a64677646d5c46428ab51c1421ec947057ccd25f1e58427a53b38712",
+  "sla_status": "COMPLIANT",
+  "servicenow_inc_ref": ""
+}
